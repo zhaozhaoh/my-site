@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export const metadata = { title: "我的站点" };
 
 export default function RootLayout({
@@ -16,12 +18,13 @@ export default function RootLayout({
             gap: 12,
           }}
         >
-          <a href="/">首页</a>
-          <a href="/about">关于我</a>
+          <Link href="/">首页</Link>
+          <Link href="/about">关于我</Link>
         </header>
         <div>{children}</div>
       </body>
     </html>
   );
 }
+
 
