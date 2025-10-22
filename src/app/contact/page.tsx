@@ -1,63 +1,76 @@
 "use client";
+
 import { useState } from "react";
 
-export default function Contact() {
+export default function ContactPage() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
-  const [touched, setTouched] = useState(false); // 是否动过表单
+  const [touched, setTouched] = useState(false);
 
-  // 很宽松的邮箱校验：只用于演示
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const requiredOk = email.trim().length > 0 && message.trim().length > 0;
-  const formOk = emailOk && requiredOk;
-
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault();      // 先不真正提交
+  // ===== 这就是“提交函数” onSubmit =====
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
     setTouched(true);
-    if (!formOk) return;     // 不通过就不提交
-    alert("已通过本地校验（下一课做真正提交）");
+
+    // 简单校验
+    const emailOk = /\S+@\S+\.\S+/.test(email);
+    const msgOk = message.trim().length > 0;
+    if (!emailOk || !msgOk) return;
+
+    // 把表单以 JSON 发到 /api/contact
+    const res = await fetch("/api/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, message }),
+    });
+
+    if (res.ok) {
+      alert("提交成功！");
+      setEmail("");
+      setMessage("");
+      setTouched(false);
+    } else {
+      alert("提交失败，请稍后再试");
+    }
   }
+  // ===== 提交函数到此结束 =====
+
+  const emailErr = touched && !/\S+@\S+\.\S+/.test(email);
+  const msgErr = touched && message.trim().length === 0;
 
   return (
     <main style={{ padding: 24, maxWidth: 520 }}>
-      <h1>联系我</h1>
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
-        <label>
-          邮箱
+      <h1>联系我们</h1>
+
+      <form onSubmit={onSubmit}>
+        <div style={{ marginTop: 12 }}>
+          <label>邮箱</label><br />
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onBlur={() => setTouched(true)}
             placeholder="you@example.com"
+            style={{ width: "100%", padding: 8 }}
           />
-        </label>
+          {emailErr && <div style={{ color: "red" }}>请输入有效邮箱</div>}
+        </div>
 
-        {/* 邮箱提示 */}
-        {touched && email.trim().length === 0 && (
-          <p style={{ color: "crimson", margin: 0 }}>邮箱是必填项</p>
-        )}
-        {touched && email.trim().length > 0 && !emailOk && (
-          <p style={{ color: "crimson", margin: 0 }}>邮箱格式不对</p>
-        )}
-
-        <label>
-          留言
+        <div style={{ marginTop: 12 }}>
+          <label>留言</label><br />
           <textarea
-            rows={4}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onBlur={() => setTouched(true)}
-            placeholder="想对我说的话…"
+            placeholder="想说的话…"
+            rows={4}
+            style={{ width: "100%", padding: 8 }}
           />
-        </label>
-        {touched && message.trim().length === 0 && (
-          <p style={{ color: "crimson", margin: 0 }}>留言是必填项</p>
-        )}
+          {msgErr && <div style={{ color: "red" }}>留言不能为空</div>}
+        </div>
 
-        <button disabled={!formOk}>提交</button>
-        {!formOk && (
-          <small style={{ color: "#666" }}>请先把必填项填对再提交</small>
-        )}
+        <button type="submit" style={{ marginTop: 12, padding: "8px 16px" }}>
+          提交
+        </button>
       </form>
     </main>
   );
