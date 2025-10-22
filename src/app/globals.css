@@ -24,3 +24,38 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+/* 强制浅色主题，覆盖模板的暗色偏好 */
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 255, 255, 255;
+}
+
+/* 如果原文件里有这段暗色模式，注释掉或覆盖即可
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-rgb: 0, 0, 0;
+  }
+}
+*/
+
+html, body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+}
+
+/* 表单 & 按钮的基础可读性样式（防止深色下看不清） */
+input, textarea, button {
+  color: #111;
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #888;
+}
+
+a { color: #0366d6; }
+nav { background: #f5f7fa; }
