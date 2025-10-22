@@ -29,6 +29,8 @@ export default function ContactPage() {
       setEmail("");
       setMessage("");
       setTouched(false);
+       // 跳转到成功页
+        window.location.href = "/contact/success";
     } else {
       alert("提交失败，请稍后再试");
     }
