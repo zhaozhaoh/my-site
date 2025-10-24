@@ -44,3 +44,25 @@ export async function addMessage(input: Omit<Message, "id" | "createdAt">) {
   await fs.writeFile(DATA_PATH, JSON.stringify(list, null, 2), "utf8");
   return item;
 }
+  
+export const getMessages = async (): Promise<Message[]> => {
+  try {
+    await ensureFile();
+    const raw = await fs.readFile(DATA_PATH, "utf8");
+    const parsed = JSON.parse(raw);
+    const list = Array.isArray(parsed) ? (parsed as Message[]) : [];
+    return [...list].sort((a, b) => {
+      const ta = Date.parse(String(a.createdAt ?? ""));
+      const tb = Date.parse(String(b.createdAt ?? ""));
+      if (isNaN(ta) && isNaN(tb)) return 0;
+      if (isNaN(ta)) return 1;
+      if (isNaN(tb)) return -1;
+      return tb - ta;
+    });
+  } catch {
+    return [];
+  }
+};
+
+
+
