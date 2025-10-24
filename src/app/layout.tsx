@@ -7,10 +7,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="zh-CN">
       <body>
         {/* 顶部导航 */}
-        <nav style={{ padding: 12, borderBottom: "1px solid #eee" }}>
-          <Link href="/" style={{ marginRight: 12 }}>首页</Link>
-          <Link href="/about" style={{ marginRight: 12 }}>关于我</Link>
+        <nav style={{ padding: 12, borderBottom: "1px solid #eee", display: "flex", gap: 12 }}>
+          <Link href="/">首页</Link>
+          <Link href="/about">关于我</Link>
           <Link href="/contact">联系我</Link>
+          <Link href="/messages">留言</Link>
         </nav>
 
         {/* 页面内容 */}

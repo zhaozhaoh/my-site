@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 export default function ContactPage() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [touched, setTouched] = useState(false);
@@ -21,7 +22,7 @@ export default function ContactPage() {
     const res = await fetch("/api/contact", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, message }),
+      body: JSON.stringify({name, email, message }),
     });
 
     if (res.ok) {
@@ -42,9 +43,26 @@ export default function ContactPage() {
 
   return (
     <main style={{ padding: 24, maxWidth: 520 }}>
-      <h1>联系我们</h1>
+      <h1>联系我</h1>
 
       <form onSubmit={onSubmit}>
+        
+        <div style={{ marginTop: 12 }}>
+          <label>姓名</label><br />
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={() => setTouched(true)}
+            placeholder="你的名字"
+            style={{ width: "100%", padding: 8 }}
+            maxLength={100}
+            required
+            name="name"
+            id="name"
+            type="text"
+          />
+        </div>
+
         <div style={{ marginTop: 12 }}>
           <label>邮箱</label><br />
           <input
