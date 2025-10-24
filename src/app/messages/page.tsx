@@ -1,11 +1,12 @@
 // src/app/messages/page.tsx
 import { getMessages } from "../../lib/messages";
+import type { Message } from "../../lib/messages";
 
-export const dynamic = "force-dynamic"; // 开发期强制不缓存
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function MessagesPage() {
-  const list = await getMessages();
+  const list: Message[] = await getMessages(); // 明确类型
 
   return (
     <main style={{ padding: 24, maxWidth: 720 }}>
@@ -16,12 +17,13 @@ export default async function MessagesPage() {
       ) : (
         <ul style={{ listStyle: "none", padding: 0 }}>
           {list.map((m, i) => {
-            const created = new Date(String((m as any).createdAt || "")).toLocaleString();
-            const name = String((m as any).name ?? "Anonymous");
-            const msg = String((m as any).message ?? "");
+            const created = new Date(String(m.createdAt ?? "")).toLocaleString();
+            const name = String(m.name ?? "Anonymous");
+            const msg = String(m.message ?? "");
+            const key = m.id ?? String(i);
             return (
               <li
-                key={String((m as any).id ?? i)}
+                key={key}
                 style={{ borderBottom: "1px solid #eee", padding: "12px 0" }}
               >
                 <div style={{ fontSize: 12, opacity: 0.7 }}>{created}</div>
