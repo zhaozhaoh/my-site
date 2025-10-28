@@ -3,6 +3,20 @@ import { getMessages } from "../../lib/messages";
 import type { Message } from "../../lib/messages";
 
 export const dynamic = "force-dynamic";
+function formatTime(input: unknown) {
+  const d = new Date(String(input ?? ""));
+  if (isNaN(d.getTime())) return "未知时间";
+  const now = new Date();
+  const isToday =
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate();
+  const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
+  const hm = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return isToday ? `今天 ${hm}` : `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${hm}`;
+}
+
+
 export const revalidate = 0;
 
 export default async function MessagesPage() {
@@ -17,7 +31,7 @@ export default async function MessagesPage() {
       ) : (
         <ul style={{ listStyle: "none", padding: 0 }}>
           {list.map((m, i) => {
-            const created = new Date(String(m.createdAt ?? "")).toLocaleString();
+            const created = formatTime(m.createdAt);
             const name = String(m.name ?? "Anonymous");
             const msg = String(m.message ?? "");
             const key = m.id ?? String(i);
