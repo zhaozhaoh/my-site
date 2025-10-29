@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
+import { supabaseAdmin } from '@/lib/supabase';
 
 export type Message = {
   id: string;
@@ -22,46 +23,56 @@ async function ensureFile() {
   }
 }
 
-export async function addMessage(input: Omit<Message, "id" | "createdAt">) {
-  await ensureFile();
-  const raw = await fs.readFile(DATA_PATH, "utf8");
-  const list = (() => {
-    try {
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed as Message[] : [];
-    } catch {
-      return [];
-    }
-  })();
+// 仅用于写入 DB 的输入类型（保留你原有的字段名 message）
+type NewMessageInput = {
+  name: string;
+  email?: string;
+  message: string;   // 你本地类型用的是 message 字段
+  ip?: string;
+  ua?: string;
+  hp?: string;       // honeypot：只用于早退，不入库
+};
 
-  const item: Message = {
-    id: randomUUID(),
-    ...input,
-    createdAt: new Date().toISOString(),
-  };
+export async function addMessage(input: NewMessageInput) {
+  // ✅ 蜜罐命中：静默早退（不写库、不报错）
+  if (input.hp) return;
 
-  list.push(item);
-  await fs.writeFile(DATA_PATH, JSON.stringify(list, null, 2), "utf8");
-  return item;
+  // 写入 Supabase（表结构是 content 列，这里把 message → content 做映射）
+  const { error } = await supabaseAdmin.from('messages').insert({
+    name: input.name,
+    email: input.email ?? null,
+    content: input.message,      // 🔁 关键：你代码里的 message → DB 的 content
+    ip: input.ip ?? null,
+    ua: input.ua ?? null,
+    // created_at 让数据库用默认 now()
+  });
+
+  if (error) {
+    // 保持抛错，交由 API 层捕获
+    throw error;
+  }
 }
+
   
 export const getMessages = async (): Promise<Message[]> => {
-  try {
-    await ensureFile();
-    const raw = await fs.readFile(DATA_PATH, "utf8");
-    const parsed = JSON.parse(raw);
-    const list = Array.isArray(parsed) ? (parsed as Message[]) : [];
-    return [...list].sort((a, b) => {
-      const ta = Date.parse(String(a.createdAt ?? ""));
-      const tb = Date.parse(String(b.createdAt ?? ""));
-      if (isNaN(ta) && isNaN(tb)) return 0;
-      if (isNaN(ta)) return 1;
-      if (isNaN(tb)) return -1;
-      return tb - ta;
-    });
-  } catch {
+  const { data, error } = await supabaseAdmin
+    .from('messages')
+    .select('id,name,email,content,created_at')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    // 你之前有容错就保留：读失败返回空数组
     return [];
   }
+
+  // 映射 DB 字段 → 你现有类型字段名
+  return (data ?? []).map(row => ({
+    id: String(row.id),
+    name: row.name ?? '',
+    email: row.email ?? '',
+    message: row.content ?? '',      // 🔁 content → message
+    createdAt: new Date(row.created_at).toISOString(), // 🔁 created_at → createdAt
+  }));
 };
 
 
