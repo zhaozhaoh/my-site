@@ -55,22 +55,24 @@ export async function addMessage(input: NewMessageInput) {
 
   
 export const getMessages = async (): Promise<Message[]> => {
-  try {
-    await ensureFile();
-    const raw = await fs.readFile(DATA_PATH, "utf8");
-    const parsed = JSON.parse(raw);
-    const list = Array.isArray(parsed) ? (parsed as Message[]) : [];
-    return [...list].sort((a, b) => {
-      const ta = Date.parse(String(a.createdAt ?? ""));
-      const tb = Date.parse(String(b.createdAt ?? ""));
-      if (isNaN(ta) && isNaN(tb)) return 0;
-      if (isNaN(ta)) return 1;
-      if (isNaN(tb)) return -1;
-      return tb - ta;
-    });
-  } catch {
+  const { data, error } = await supabaseAdmin
+    .from('messages')
+    .select('id,name,email,content,created_at')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    // 你之前有容错就保留：读失败返回空数组
     return [];
   }
+
+  // 映射 DB 字段 → 你现有类型字段名
+  return (data ?? []).map(row => ({
+    id: String(row.id),
+    name: row.name ?? '',
+    email: row.email ?? '',
+    message: row.content ?? '',      // 🔁 content → message
+    createdAt: new Date(row.created_at).toISOString(), // 🔁 created_at → createdAt
+  }));
 };
 
 
